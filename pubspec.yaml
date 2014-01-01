@@ -1,0 +1,10 @@
+name: springbok_db
+version: 0.0.1
+author: Christophe Hurpeau <christophe@hurpeau.com>
+description: Springbok Abstract DB API
+homepage: https://github.com/christophehurpeau/dart-springbok_db
+documentation: https://github.com/christophehurpeau/dart-springbok_db/wiki
+environment:
+  sdk: '>=1.0.0 <2.0.0'
+dependencies:
+  unittest: '>=0.9.0 <0.10.0'
