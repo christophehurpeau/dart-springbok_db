@@ -15,10 +15,20 @@ abstract class AbstractStoreInstance<T extends Model> {
   
   Converters get converter;
   
-  Future<StoreCursor> cursor([criteria]);
+  Future<StoreCursor<T>> cursor([criteria]);
   Future<int> count([criteria]);
   Future<List> distinct(field, [criteria]);
-  Future<T> findOne([criteria, fields]);
+  
+  Future<T> findOne([criteria, fields])
+    => cursor(criteria).then((StoreCursor<T> cursor){
+    return cursor.next()
+        .then((T model){
+          cursor.close();
+          return model;
+        });
+  });
+  
+  
   Future<T> byId(Id id, [fields]) => findOne(idToCriteria(id), fields);
   
   Future insert(Map values);
@@ -35,7 +45,8 @@ abstract class AbstractStoreInstance<T extends Model> {
   Future removeOneById(Id id) => removeOne(idToCriteria(id));
   
 
-  T toModel(Map result) => result == null ? null : model$.createInstance(result);
+  T toModel(Map result) => result == null ? null : model$.storeMapToInstance(result);
+  
   Map idToCriteria(Id id) => { 'id': id.toString() };
   Map instanceToStoreMapResult(Map result) => result;
 }
