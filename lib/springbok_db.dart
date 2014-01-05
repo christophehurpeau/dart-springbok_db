@@ -4,13 +4,18 @@ import 'dart:async';
 @MirrorsUsed(targets: 'dart.dom.html.window, '
     'dart.io.Platform.operatingSystem')
 import 'dart:mirrors';
+import 'package:unmodifiable_collection/unmodifiable_collection.dart';
 
 part 'src/meta.dart';
 part 'src/id.dart';
-part 'src/model_converter.dart';
 part 'src/model.dart';
 part 'src/model_dollar.dart';
-part 'src/converter.dart';
+part 'src/converter/converter.dart';
+part 'src/converter/output.dart';
+part 'src/converter/rule.dart';
+part 'src/converter/basic_rules.dart';
+part 'src/converter/model_rules.dart';
+part 'src/converter/model_converters.dart';
 part 'src/store/store.dart';
 part 'src/store/cursor.dart';
 

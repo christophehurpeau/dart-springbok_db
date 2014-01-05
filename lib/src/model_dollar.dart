@@ -1,16 +1,11 @@
 part of springbok_db;
 
 class Model$<T extends Model> {
-  static final Converters _converter = new Converters({
-    reflectClass(DateTime): const DateTimeConverter(),
-    reflectClass(Id): const IdConverter(),
-    reflectClass(Model): const ModelConverter(),
-    reflectClass(List): const ListConverter(),
-  });
   static final Map<Type, Model$> _modelsInfos = new Map();
   static final bool isOnClient = _io == null;
   
-  static Map<Type, Model$> get modelsInfos => _modelsInfos;
+  static final UnmodifiableMapView<Type, Model$> modelsInfos
+    = new UnmodifiableMapView(_modelsInfos);
   
   final Type type;
   final ClassMirror classMirror;
@@ -18,6 +13,8 @@ class Model$<T extends Model> {
   
   final List classAnnotations;
   final DbKey dbKey;
+  
+  ModelConverters<T> _converters;
   
   String storeKey;
   
@@ -31,14 +28,14 @@ class Model$<T extends Model> {
   Future<T> findOne([criteria, fields]) => _store.findOne(criteria, fields);
   Future<T> byId(Id id, [fields]) => _store.byId(id, fields);
 
-  Future insert(Map values) => _store.insert(values);
-  Future insertAll(List<Map> values) => _store.insertAll(values);
+  Future insert(Map values) => _store.insert(_converters.mapToStoreMap(values));
+  Future insertAll(List<Map> values) => _store.insertAll(values.map(_converters.mapToStoreMap));
 
   Future update(criteria, Map values) => _store.update(criteria, values);
   Future updateOne(criteria, Map values) => _store.updateOne(criteria, values);
   Future updateOneById(Id id, Map values) => _store.updateOneById(id, values);
   
-  Future save(Map values) => _store.save(values);
+  Future save(Map values) => _store.save(_converters.mapToStoreMap(values));
   
   Future remove(criteria) => _store.remove(criteria);
   Future removeOne(criteria) => _store.removeOne(criteria);
@@ -61,6 +58,8 @@ class Model$<T extends Model> {
   {
     assert(!_modelsInfos.containsKey(type));
     _modelsInfos[type] = this;
+    
+    _converters = new ModelConverters(this);
    
     var declarations = classMirror.declarations;
     declarations.forEach((Symbol symbol, DeclarationMirror declaration) {
@@ -75,7 +74,7 @@ class Model$<T extends Model> {
     
     StoreKey storeKey = classAnnotations
         .firstWhere((annotation) => annotation is StoreKey,
-        orElse: () => null);
+              orElse: () => null);
     if (storeKey == null) {
       this.storeKey = MirrorSystem.getName(classMirror.simpleName);
     } else {
@@ -97,103 +96,34 @@ class Model$<T extends Model> {
   Future changeDb(String key) {
     _db = new Db(key);
     _store = _db.add(this);
+    _converters.updateStore(_store);
     return new Future.value();
   }
-  
-  T createInstance(Map<String, dynamic> values, [Converters converters]) {
-    if (converters == null) converters = _converter;
-    var instance = classMirror.newInstance(const Symbol(''), []);
-    values.forEach((String fieldName, value) {
-      var variable = variables[fieldName];
-      if (variable == null) {
-        //throw new Exception('Unexpected key $fieldName');
-        return;
-      }
-      
-      if (value != null) {
-        ClassMirror variableType = variable.type;
-        value = converters.decode(variableType, value);
-      }
 
-      instance.setField(variable.simpleName, value);
-    });
-    return instance.reflectee;
-  }
+  InstanceMirror newInstanceMirror() => classMirror.newInstance(const Symbol(''), []);
   
-  List<T> createListOfInstances(Iterable<Map<String, dynamic>> listOfValues, [Converters converters]) {
-    return listOfValues.map((m) => createInstance(m, converters)).toList();
-  }
+  T newInstance() => newInstanceMirror().reflectee;
   
-  Map instanceToMap(T object, [Converters converters]) {
-    if (converters == null) converters = _converter;
-    assert(object != null);
-    InstanceMirror mirror = reflect(object);
-    
-    Map result = {};
-    variables.forEach((String fieldName, VariableMirror variable) {
-      Object value = mirror.getField(variable.simpleName).reflectee;
-      
-      if (value != null) {
-        ClassMirror variableType = variable.type;
-        value = converters.encode(variableType, value);
-        if (value != null) {
-          result[fieldName] = value;
-        }
-      }
-    });
-    return result;
-  }
-  
-  List<Map> createListFromInstances(Iterable<T> listOfValues, [Converters converters]) {
-    return listOfValues.map((m) => instanceToMap(m, converters)).toList();
-  }
-  
-  
-  T storeMapToInstance(Map <String, dynamic> values, [Converters converters]) {
-    if (converters == null) converters = _store.converter;
-    var instance = classMirror.newInstance(const Symbol(''), []);
-    values.forEach((String fieldName, value) {
-      var variable = variables[fieldName];
-      if (variable == null) {
-        throw new Exception('Unexpected key $fieldName');
-      }
-      
-      if (value != null) {
-        ClassMirror variableType = variable.type;
-        value = converters.decode(variableType, value);
-      }
+  T mapToInstance(Map values) => _converters.mapToInstance(values);
 
-      instance.setField(variable.simpleName, value);
-    });
-    return instance.reflectee;
-  }
+  List<T> listOfMapsToInstances(Iterable<Map<String, dynamic>> listOfValues)
+    => _converters.listOfMapsToInstances(listOfValues);
   
-  List<T> createListOfInstancesFromStore(Iterable<Map<String, dynamic>> listOfValues, [Converters converters]) {
-    return listOfValues.map((v) => storeMapToInstance(v, converters)).toList();
-  }
+  T storeMapToInstance(Map values)  => _converters.storeMapToInstance(values);
   
-  // Same, but set null values too
-  Map instanceToStoreMap(T object, [Converters converters]) {
-    if (converters == null) converters = _store.converter;
-    assert(object != null);
-    InstanceMirror mirror = reflect(object);
-    
-    Map result = {};
-    variables.forEach((String fieldName, VariableMirror variable) {
-      Object value = mirror.getField(variable.simpleName).reflectee;
-      
-      if (value != null) {
-        ClassMirror variableType = variable.type;
-        value = converters.encode(variableType, value);
-      }
-      
-      result[fieldName] = value;
-    });
-    return _store == null ? result : _store.instanceToStoreMapResult(result);
-  }
+  List<T> listOfStoreMapsToInstances(Iterable<Map<String, dynamic>> listOfValues)
+    => _converters.listOfStoreMapsToInstances(listOfValues);
   
-  List<Map> createListFromInstancesToStore(Iterable<T> listOfValues, [Converters converters]) {
-    return listOfValues.map((m) => instanceToStoreMap(m, converters)).toList();
-  }
+  Map instanceToMap(T instance)
+    => _converters.instanceToMap(instance);
+
+  List<Map> listOfInstancesToMaps(Iterable<T> listOfValues)
+    => _converters.listOfInstancesToMaps(listOfValues);
   
+  Map instanceToStoreMap(T instance)
+    => _converters.instanceToStoreMap(instance);
+  
+  List<Map> listOfInstancesToStoreMaps(Iterable<T> listOfValues)
+    => _converters.listOfInstancesToStoreMaps(listOfValues);
+ 
 }

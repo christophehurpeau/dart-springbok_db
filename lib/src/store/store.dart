@@ -13,7 +13,7 @@ abstract class AbstractStoreInstance<T extends Model> {
   
   AbstractStoreInstance(this.model$);
   
-  Converters get converter;
+  Map<ClassMirror, ConverterRule> get converterRules;
   
   Future<StoreCursor<T>> cursor([criteria]);
   Future<int> count([criteria]);
@@ -48,5 +48,5 @@ abstract class AbstractStoreInstance<T extends Model> {
   T toModel(Map result) => result == null ? null : model$.storeMapToInstance(result);
   
   Map idToCriteria(Id id) => { 'id': id.toString() };
-  Map instanceToStoreMapResult(Map result) => result;
+  Map instanceToStoreMapResult(Map result) => model$.instanceToStoreMap(result);
 }

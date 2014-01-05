@@ -26,7 +26,7 @@ main() {
   test('ModelInfos',(){
     expect(User.$.variables.length, 5);
     expect(Model$.modelsInfos.length, 2);
-    User u = User.$.createInstance({
+    User u = User.$.mapToInstance({
       'firstName': 'John',
       'lastName': 'Doe',
       'age': 24,

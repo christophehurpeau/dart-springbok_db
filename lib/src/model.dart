@@ -7,6 +7,6 @@ abstract class Model {
   Map toStoreMap() => _modelInfos.instanceToStoreMap(this);
   toJson() => toMap();
   
-  Future save() => _modelInfos.save(toStoreMap());
-  Future insert() => _modelInfos.insert(toStoreMap());
+  Future save() => _modelInfos._store.save(toStoreMap());
+  Future insert() => _modelInfos._store.insert(toStoreMap());
 }
