@@ -22,24 +22,29 @@ class Model$<T extends Model> {
   AbstractStoreInstance<T> _store;
   
   // -- Store proxy
-  Future<StoreCursor<T>> cursor([criteria]) => _store.cursor(criteria);
-  Future<int> count([criteria]) => _store.count(criteria);
-  Future<List> distinct(field, [criteria]) => _store.distinct(field, criteria);
-  Future<T> findOne([criteria, fields]) => _store.findOne(criteria, fields);
+  Future<StoreCursor<T>> cursor([StoreCriteria criteria]) => _store.cursor(criteria);
+  Future<int> count([StoreCriteria criteria]) => _store.count(criteria);
+  Future<List> distinct(field, [StoreCriteria criteria]) => _store.distinct(field, criteria);
+  Future<T> findOne([StoreCriteria criteria, fields]) => _store.findOne(criteria, fields);
   Future<T> byId(Id id, [fields]) => _store.byId(id, fields);
+  Future<List<T>> byIds(Iterable<Id> ids, [fields]) => _store.byIds(ids, fields);
 
   Future insert(Map values) => _store.insert(_converters.mapToStoreMap(values));
   Future insertAll(List<Map> values) => _store.insertAll(values.map(_converters.mapToStoreMap));
 
-  Future update(criteria, Map values) => _store.update(criteria, values);
-  Future updateOne(criteria, Map values) => _store.updateOne(criteria, values);
+  Future update(StoreCriteria criteria, Map values)
+    => _store.update(criteria, dataToStoreData(values));
+  Future updateOne(StoreCriteria criteria, Map values)
+    => _store.updateOne(criteria, dataToStoreData(values));
   Future updateOneById(Id id, Map values) => _store.updateOneById(id, values);
   
   Future save(Map values) => _store.save(_converters.mapToStoreMap(values));
   
-  Future remove(criteria) => _store.remove(criteria);
-  Future removeOne(criteria) => _store.removeOne(criteria);
+  Future remove(StoreCriteria criteria) => _store.remove(criteria);
+  Future removeOne(StoreCriteria criteria) => _store.removeOne(criteria);
   Future removeOneById(Id id) => _store.removeOneById(id);
+  StoreCriteria newCriteria() => _store.newCriteria();
+  StoreCriteria fromCriteria(Map criteria) => _store.newCriteria()..fromMap(criteria);
   // -- End
   
   Model$(Type type) :
@@ -125,5 +130,18 @@ class Model$<T extends Model> {
   
   List<Map> listOfInstancesToStoreMaps(Iterable<T> listOfValues)
     => _converters.listOfInstancesToStoreMaps(listOfValues);
- 
+  
+  Map mapToStoreMap(Map value) => _converters.mapToStoreMap(value);
+  Map storeMapToMap(Map value) => _converters.storeMapToMap(value);
+  
+  
+  
+  Map dataToStoreData(Map value){
+    if (value == null) {
+      return value;
+    }
+    var output = _converters.dataToStoreData(value);
+    print('dataToStoreData = $output');
+    return output;
+  }
 }

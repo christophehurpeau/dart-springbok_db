@@ -44,4 +44,27 @@ class ClientSideOnly {
 }
 
 
+/* Relations */
+class Relation {
+  final Type type;
+  
+  const Relation(Type this.type); 
+}
 
+class HasMany extends Relation {
+  const HasMany(Type type) : super(type);
+  
+  String toString() => 'HasMany';
+}
+
+class HasOne extends Relation {
+  const HasOne(Type type) : super(type);
+  
+  String toString() => 'HasOne';
+}
+
+class BelongsTo extends Relation {
+  const BelongsTo(Type type) : super(type);
+  
+  String toString() => 'BelongsTo';
+}

@@ -18,6 +18,7 @@ part 'src/converter/model_rules.dart';
 part 'src/converter/model_converters.dart';
 part 'src/store/store.dart';
 part 'src/store/cursor.dart';
+part 'src/store/criteria.dart';
 
 
 

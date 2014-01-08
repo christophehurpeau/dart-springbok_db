@@ -4,26 +4,31 @@ class ModelConverters<T extends Model> {
   static final Converter _instanceToMapConverter = new InstanceToMapConverter(rules: {
     reflectClass(DateTime): const DateTimeToIntRule(),
     reflectClass(Id): const IdToStringRule(),
-    reflectClass(List): const ListConverterRule(),
     reflectClass(Model): const ModelToMapRule(),
   });
   
   static final Converter _mapToInstanceConverter = new MapToInstanceConverter(rules: {
     reflectClass(DateTime): const DateTimeToIntRule(),
     reflectClass(Id): const IdToStringRule(),
-    reflectClass(List): const ListConverterRule(),
     reflectClass(Model): const ModelToMapRule(),
   });
   
   Model$ model$;
   Converter _instanceToStoreMapConverter;
   Converter _storeMapToInstanceConverter;
+  MapToStoreMapConverter _mapToStoreMapConverter;
   
   ModelConverters(this.model$);
   
   void updateStore(AbstractStoreInstance<T> store) {
     _storeMapToInstanceConverter = new MapToInstanceConverter(rules: store.converterRules, allowNull: true);
     _instanceToStoreMapConverter = new InstanceToMapConverter(rules: store.converterRules, allowNull: true);
+    _mapToStoreMapConverter = new MapToStoreMapConverter(rules: store.converterRules);
+    _mapToStoreMapConverter.rules.addAll({
+      reflectClass(List): const ListSimpleConverterRule(),
+      reflectClass(Map): const MapSimpleConverterRule(),
+      reflectClass(String): const StringToIdConverterRule(),
+    });
   }
   
   
@@ -115,4 +120,15 @@ class ModelConverters<T extends Model> {
 
   Map storeMapToMap(Map values)
     => _mapToMap(model$, values, _storeMapToInstanceConverter);
+  
+  Map dataToStoreData(Map value) {
+    Map result = {};
+    value.forEach((String fieldName, value) {
+      if (value != null) {
+        value = _mapToStoreMapConverter.convert(reflectClass(value.runtimeType), value);
+        result[fieldName] = value;
+      }
+    });
+    return result;
+  }
 }

@@ -9,7 +9,7 @@ abstract class Id {
     }
   }
   
-  String toJson() => toString();
+  toJson() => toString();
   bool operator==(Id other) => other.toString() == toString();
 }
 
@@ -18,8 +18,8 @@ class IdString implements Id{
   
   const IdString(this._string);
   
-  String toString() => _string;
-  String toJson() => _string;
+  toString() => _string;
+  toJson() => _string;
   
   int get hashCode => _string.hashCode;
 

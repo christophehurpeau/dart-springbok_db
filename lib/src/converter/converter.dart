@@ -2,6 +2,8 @@ part of springbok_db;
 
 abstract class Converter<T, U> {
   final Map<ClassMirror, ConverterRule<T, U>> rules = {
+    reflectClass(List): const ListConverterRule(),
+    reflectClass(Map): const MapConverterRule(),
   };
   
   final ConverterOutput output;
@@ -15,17 +17,19 @@ abstract class Converter<T, U> {
   }
   
   ConverterRule searchRule(ClassMirror variableType) {
-    var model$ = Model$.modelsInfos[variableType.reflectedType];
+    var model$ = variableType.hasReflectedType ?
+        Model$.modelsInfos[variableType.reflectedType]
+        : null;
     //print('searchRule: $variableType, ${model$}');
     return rules[model$ != null ? reflectClass(Model) : variableType.originalDeclaration];
   }
   
   U convert(ClassMirror variableType, T value) {
     var rule = searchRule(variableType);
-    //print(convert: '${variableType.originalDeclaration}, $rule');
+    //print('convert: ${variableType.originalDeclaration}, $rule');
     return rule == null ? value : convertFromRule(rule, variableType, value);
   }
-  
+
   U convertFromRule(ConverterRule rule, ClassMirror variableType, T value) {
     return output.convert(this, rule, variableType, value);
   }
@@ -40,4 +44,42 @@ class InstanceToMapConverter extends Converter<Object, dynamic> {
 class MapToInstanceConverter extends Converter<Object, dynamic> {
   MapToInstanceConverter({Map<ClassMirror, ConverterRule> rules, bool allowNull:false})
       : super(const DecoderMapToInstance(), rules: rules, allowNull: allowNull);
+}
+
+class _MapToMapConverter extends Converter<dynamic, dynamic> {
+  _MapToMapConverter(ConverterOutput output, {Map<ClassMirror, ConverterRule> rules, bool allowNull:false})
+    : super(output, rules: rules, allowNull: allowNull);
+  
+  convert(ClassMirror variableType, value) {
+    var rule;
+    if (value is List) {
+      rule = const ListSimpleConverterRule();
+    } else if (value is Map) {
+      rule = const MapSimpleConverterRule();
+    } else {
+      rule = rules[variableType.originalDeclaration];
+    }
+    
+    //print('convertSimple: ${variableType.originalDeclaration}, $rule');
+    if (rule == null) {
+      if (value is String || value is num) {
+        return value;
+      }
+      return value.toJson();
+    }
+    return convertFromRule(rule, variableType, value);
+  }
+}
+
+
+class MapToStoreMapConverter extends _MapToMapConverter {
+  MapToStoreMapConverter({Map<ClassMirror, ConverterRule> rules, bool allowNull:false})
+  : super(const EncoderMapToMap(), rules: rules, allowNull: allowNull);
+  
+}
+
+class StoreMapToMapConverter extends _MapToMapConverter {
+  StoreMapToMapConverter({Map<ClassMirror, ConverterRule> rules, bool allowNull:false})
+  : super(const DecoderMapToMap(), rules: rules, allowNull: allowNull);
+  
 }
