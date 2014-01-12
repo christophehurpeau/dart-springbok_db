@@ -14,27 +14,30 @@ abstract class AbstractStoreInstance<T extends Model> {
   AbstractStoreInstance(this.model$);
   
   Map<ClassMirror, ConverterRule> get converterRules;
+  Map<ClassMirror, ConverterRule> mapToStoreMapConverterRules = null;
   
   Future<StoreCursor<T>> cursor([StoreCriteria criteria]);
   Future<int> count([StoreCriteria criteria]);
   Future<List> distinct(field, [StoreCriteria criteria]);
   
-  Future<T> findOne([StoreCriteria criteria, fields])
-    => cursor(criteria).then((StoreCursor<T> cursor){
-    return cursor.next()
+  Future<T> findOne([StoreCriteria criteria, fields]) {
+    return cursor(criteria).then((StoreCursor<T> cursor){
+      return cursor.next()
         .then((T model){
           cursor.close();
           return model;
         });
-  });
-  
+    });
+  }
   
   Future<T> byId(Id id, [fields]) => findOne(idToCriteria(id), fields);
-  Future<List<T>> byIds(Iterable<Id> ids, [fields]) => cursor(idsToCriteria(ids))
+  Future<List<T>> byIds(Iterable<Id> ids, [fields]) {
+    return cursor(idsToCriteria(ids))
       .then((StoreCursor cursor){
         cursor.fields = fields;
         return cursor.toList();
       });
+  }
   
   Future insert(Map values);
   Future insertAll(List<Map> values);

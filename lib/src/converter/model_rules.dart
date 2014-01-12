@@ -16,12 +16,24 @@ class ModelToMapRule implements ConverterRule<Model, Map> {
     return instanceToMap(model$, value, converter);
   }
 
-  Model createInstance(Model$ model$, Map value, Converter converter)
-    => ModelConverters._mapToInstance(model$, value, converter);
-  Map instanceToMap(Model$ model$, Model value, Converter converter)
-    => ModelConverters._instanceToMap(model$, value, converter);
+  Model createInstance(Model$ model$, Map value, Converter converter) {
+    return ModelConverters._mapToInstance(model$, value, converter);
+  }
+  
+  Map instanceToMap(Model$ model$, Model value, Converter converter) {
+    return ModelConverters._instanceToMap(model$, value, converter);
+  }
 }
 
 class ModelToMapStoreRule extends ModelToMapRule {
-  const ModelToMapStoreRule();
+  Converter _converter;
+  ModelToMapStoreRule(this._converter);
+
+  Model createInstance(Model$ model$, Map value, Converter converter) {
+    return ModelConverters._mapToInstance(model$, value, _converter);
+  }
+  
+  Map instanceToMap(Model$ model$, Model value, Converter converter) {
+    return ModelConverters._instanceToMap(model$, value, _converter);
+  }
 }

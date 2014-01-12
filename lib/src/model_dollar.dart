@@ -36,7 +36,7 @@ class Model$<T extends Model> {
     => _store.update(criteria, dataToStoreData(values));
   Future updateOne(StoreCriteria criteria, Map values)
     => _store.updateOne(criteria, dataToStoreData(values));
-  Future updateOneById(Id id, Map values) => _store.updateOneById(id, values);
+  Future updateOneById(Id id, Map values) => _store.updateOneById(id, dataToStoreData(values));
   
   Future save(Map values) => _store.save(_converters.mapToStoreMap(values));
   
@@ -111,25 +111,31 @@ class Model$<T extends Model> {
   
   T mapToInstance(Map values) => _converters.mapToInstance(values);
 
-  List<T> listOfMapsToInstances(Iterable<Map<String, dynamic>> listOfValues)
-    => _converters.listOfMapsToInstances(listOfValues);
+  List<T> listOfMapsToInstances(Iterable<Map<String, dynamic>> listOfValues) {
+    return _converters.listOfMapsToInstances(listOfValues);
+  }
   
   T storeMapToInstance(Map values)  => _converters.storeMapToInstance(values);
   
-  List<T> listOfStoreMapsToInstances(Iterable<Map<String, dynamic>> listOfValues)
-    => _converters.listOfStoreMapsToInstances(listOfValues);
+  List<T> listOfStoreMapsToInstances(Iterable<Map<String, dynamic>> listOfValues) {
+    return _converters.listOfStoreMapsToInstances(listOfValues);
+  }
   
-  Map instanceToMap(T instance)
-    => _converters.instanceToMap(instance);
-
-  List<Map> listOfInstancesToMaps(Iterable<T> listOfValues)
-    => _converters.listOfInstancesToMaps(listOfValues);
+  Map instanceToMap(T instance) {
+    return _converters.instanceToMap(instance);
+  }
   
-  Map instanceToStoreMap(T instance)
-    => _converters.instanceToStoreMap(instance);
+  List<Map> listOfInstancesToMaps(Iterable<T> listOfValues) {
+    return _converters.listOfInstancesToMaps(listOfValues);
+  }
   
-  List<Map> listOfInstancesToStoreMaps(Iterable<T> listOfValues)
-    => _converters.listOfInstancesToStoreMaps(listOfValues);
+  Map instanceToStoreMap(T instance) {
+    return _converters.instanceToStoreMap(instance);
+  }
+  
+  List<Map> listOfInstancesToStoreMaps(Iterable<T> listOfValues) {
+    return _converters.listOfInstancesToStoreMaps(listOfValues);
+  }
   
   Map mapToStoreMap(Map value) => _converters.mapToStoreMap(value);
   Map storeMapToMap(Map value) => _converters.storeMapToMap(value);
@@ -137,7 +143,7 @@ class Model$<T extends Model> {
   
   
   Map dataToStoreData(Map value){
-    if (value == null) {
+    if (value == null || value.isEmpty) {
       return value;
     }
     var output = _converters.dataToStoreData(value);

@@ -14,6 +14,8 @@ part 'src/converter/converter.dart';
 part 'src/converter/output.dart';
 part 'src/converter/rule.dart';
 part 'src/converter/basic_rules.dart';
+part 'src/converter/basic_rules_iterable.dart';
+part 'src/converter/basic_rules_map.dart';
 part 'src/converter/model_rules.dart';
 part 'src/converter/model_converters.dart';
 part 'src/store/store.dart';

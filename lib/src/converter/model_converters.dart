@@ -25,10 +25,14 @@ class ModelConverters<T extends Model> {
     _instanceToStoreMapConverter = new InstanceToMapConverter(rules: store.converterRules, allowNull: true);
     _mapToStoreMapConverter = new MapToStoreMapConverter(rules: store.converterRules);
     _mapToStoreMapConverter.rules.addAll({
-      reflectClass(List): const ListSimpleConverterRule(),
+      reflectClass(List): const IterableSimpleConverterRule(),
       reflectClass(Map): const MapSimpleConverterRule(),
       reflectClass(String): const StringToIdConverterRule(),
+      reflectClass(Model): new ModelToMapStoreRule(_instanceToStoreMapConverter),
     });
+    if (store.mapToStoreMapConverterRules != null) {
+      _mapToStoreMapConverter.rules.addAll(store.mapToStoreMapConverterRules);
+    }
   }
   
   

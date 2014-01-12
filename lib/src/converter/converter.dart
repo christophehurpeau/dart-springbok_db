@@ -2,7 +2,8 @@ part of springbok_db;
 
 abstract class Converter<T, U> {
   final Map<ClassMirror, ConverterRule<T, U>> rules = {
-    reflectClass(List): const ListConverterRule(),
+    reflectClass(List): const IterableConverterRule(),
+    reflectClass(Set): const IterableConverterRule(),
     reflectClass(Map): const MapConverterRule(),
   };
   
@@ -49,16 +50,23 @@ class MapToInstanceConverter extends Converter<Object, dynamic> {
 class _MapToMapConverter extends Converter<dynamic, dynamic> {
   _MapToMapConverter(ConverterOutput output, {Map<ClassMirror, ConverterRule> rules, bool allowNull:false})
     : super(output, rules: rules, allowNull: allowNull);
+
+  ConverterRule searchRule(ClassMirror variableType, [value]) {
+    assert(value != null);
+    if (value is Model) {
+      return rules[reflectClass(Model)];
+    } else if (value is Map) {
+      return const MapSimpleConverterRule();
+    } else if (value is Iterable) {
+      return const IterableSimpleConverterRule();
+    } else {
+      return rules[variableType.originalDeclaration];
+    }
+    return null;
+  }
   
   convert(ClassMirror variableType, value) {
-    var rule;
-    if (value is List) {
-      rule = const ListSimpleConverterRule();
-    } else if (value is Map) {
-      rule = const MapSimpleConverterRule();
-    } else {
-      rule = rules[variableType.originalDeclaration];
-    }
+    var rule = searchRule(variableType, value);
     
     //print('convertSimple: ${variableType.originalDeclaration}, $rule');
     if (rule == null) {
