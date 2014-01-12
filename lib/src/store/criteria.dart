@@ -11,7 +11,14 @@ abstract class StoreCriteria {
     map.forEach((k, v) {
       if (v is Map) {
         assert(v.length == 1);
-        fieldInValues(k, v[r'$in']);
+        var firstKey = v.keys.first;
+        if (firstKey == r'$in') {
+          fieldInValues(k, v[r'$in']);
+        } else if (firstKey == r'$or') {
+          or(v[r'$or']);
+        } else {
+          throw new UnsupportedError('Unssupported key $firstKey');
+        }
       } else {
         fieldEqualsTo(k, v);
       }
@@ -26,6 +33,12 @@ abstract class StoreCriteria {
   fieldInValues(String field, Iterable values) {
     criteria[field] = { r'$in': values };
   }
+
+  or(Iterable listOfCriteria) {
+    assert(criteria[r'$or'] == null);
+    criteria[r'$or'] = listOfCriteria.map((c) => c is StoreCriteria ? c.criteria : c);
+  }
+  
   
   toJson() => criteria;
 }
